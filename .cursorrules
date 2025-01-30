@@ -1,0 +1,8 @@
+stack:
+- supabase
+- react
+- typescript
+- nextjs
+- tailwind
+- shadcn
+
