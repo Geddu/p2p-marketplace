@@ -14,6 +14,7 @@ import {
   Gift,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const navItems = [
   { icon: Home, label: "home", href: "/" },
@@ -23,15 +24,37 @@ const navItems = [
   { icon: UserIcon, label: "profile", href: "/profile" },
 ];
 
+function NavbarLoading() {
+  return (
+    <nav className="md:border-b fixed md:relative bottom-0 left-0 right-0 bg-background border-t md:border-t-0 z-50">
+      <div className="container mx-auto flex h-16 items-center px-4">
+        <div className="mx-auto flex w-full md:w-auto items-center justify-around md:justify-start md:space-x-6">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="flex flex-col md:flex-row items-center md:gap-2 text-sm py-1"
+            >
+              <Skeleton className="h-6 w-6 md:h-4 md:w-4" />
+              <Skeleton className="h-4 w-16 mt-1 md:mt-0" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </nav>
+  );
+}
+
 export default function Navbar() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const { t } = useTranslation();
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      setLoading(false);
     });
 
     // Listen for auth changes
@@ -47,6 +70,10 @@ export default function Navbar() {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
   };
+
+  if (loading) {
+    return <NavbarLoading />;
+  }
 
   return (
     <nav className="md:border-b fixed md:relative bottom-0 left-0 right-0 bg-background border-t md:border-t-0 z-50">

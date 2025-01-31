@@ -1,0 +1,12 @@
+{
+  "tooManyImages": "Enintään {{count}} kuvaa sallittu",
+  "imagesUploaded": "Kuvat ladattu onnistuneesti",
+  "errorUploadingImages": "Virhe kuvien lataamisessa",
+  "imageRemoved": "Kuva poistettu onnistuneesti",
+  "errorRemovingImage": "Virhe kuvan poistamisessa",
+  "mainImageSet": "Pääkuva asetettu onnistuneesti",
+  "currentMainImage": "Nykyinen pääkuva",
+  "setAsMainImage": "Aseta pääkuvaksi",
+  "mainImage": "Pääkuva",
+  "itemImage": "Kuva {{number}}"
+}

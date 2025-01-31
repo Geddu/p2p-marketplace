@@ -28,7 +28,7 @@ export type Invite = {
   created_at: string;
   accepted_at: string | null;
   expires_at: string;
-  accepted_profile: {
+  inviter: {
     full_name: string | null;
     avatar_url: string | null;
   } | null;
@@ -42,7 +42,7 @@ export const getAuthenticatedImageUrl = async (fileName: string) => {
     return fileName;
   }
 
-  const bucketName = "item-images";
+  const bucketName = "items-images";
 
   try {
     const { data, error } = await supabase.storage

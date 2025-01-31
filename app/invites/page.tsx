@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { supabase, type Profile, type Invite } from "@/lib/supabase";
+import { supabase, type Profile } from "@/lib/supabase";
 import InvitesList from "@/components/invites/InvitesList";
 import CreateInviteForm from "@/components/invites/CreateInviteForm";
 import {
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 async function getProfile() {
   const {
@@ -30,24 +31,9 @@ async function getProfile() {
   return data as Profile;
 }
 
-async function getInvites(profileId: string) {
-  const { data, error } = await supabase
-    .from("invites")
-    .select(
-      `
-      *,
-      accepted_profile:profiles(full_name, avatar_url)
-    `
-    )
-    .eq("inviter_id", profileId)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data as Invite[];
-}
-
 export default function InvitesPage() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   // Check authentication
   useEffect(() => {
@@ -64,16 +50,9 @@ export default function InvitesPage() {
     queryFn: getProfile,
   });
 
-  // Fetch invites data
-  const { data: invites, isLoading: isLoadingInvites } = useQuery({
-    queryKey: ["invites", profile?.id],
-    queryFn: () => (profile?.id ? getInvites(profile.id) : Promise.resolve([])),
-    enabled: !!profile?.id,
-  });
-
-  if (isLoadingProfile || isLoadingInvites) {
+  if (isLoadingProfile) {
     return (
-      <div className="container mx-auto py-10 text-center">Loading...</div>
+      <div className="container mx-auto py-10 text-center">{t("loading")}</div>
     );
   }
 
@@ -85,10 +64,9 @@ export default function InvitesPage() {
     <div className="container mx-auto py-10 space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Invite Management</CardTitle>
+          <CardTitle>{t("inviteManagement")}</CardTitle>
           <CardDescription>
-            You have {profile.invites_left} invites remaining. Share them
-            wisely!
+            {t("invitesRemaining", { count: profile.invites_left })}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -98,13 +76,11 @@ export default function InvitesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Your Invites</CardTitle>
-          <CardDescription>
-            Track the status of your sent invites
-          </CardDescription>
+          <CardTitle>{t("yourInvites")}</CardTitle>
+          <CardDescription>{t("trackInvites")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <InvitesList invites={invites || []} />
+          <InvitesList />
         </CardContent>
       </Card>
     </div>

@@ -1,20 +1,23 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { useTranslation } from "react-i18next"
-import { SearchBar } from "@/components/search-bar"
-import { CategoryList } from "@/components/category-list"
-import { ItemGrid } from "@/components/item-grid"
-import { Button } from "@/components/ui/button"
-import { PlusCircle } from "lucide-react"
+import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { SearchBar } from "@/components/search-bar";
+import { CategoryList } from "@/components/category-list";
+import { ItemGrid } from "@/components/item-grid";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
 
 export default function Home() {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
 
   useEffect(() => {
-    console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL)
-    console.log("Supabase Anon Key:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "Set" : "Not set")
-  }, [])
+    console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log(
+      "Supabase Anon Key:",
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "Set" : "Not set"
+    );
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
@@ -23,12 +26,6 @@ export default function Home() {
       <CategoryList />
       <h2 className="text-2xl font-semibold mb-4">{t("recommendedForYou")}</h2>
       <ItemGrid />
-      <div className="flex justify-center">
-        <Button variant="accent">
-          <PlusCircle className="mr-2 h-4 w-4" /> {t("addNewItem")}
-        </Button>
-      </div>
     </div>
-  )
+  );
 }
-

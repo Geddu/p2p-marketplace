@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Mail, Lock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function LoginForm() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,10 +29,10 @@ export default function LoginForm() {
 
       if (error) throw error;
 
-      toast.success("Welcome back!");
+      toast.success(t("welcomeBack"));
       router.push("/");
     } catch (error: any) {
-      toast.error(error.message || "Failed to sign in");
+      toast.error(t("failedToSignIn"));
     } finally {
       setIsLoading(false);
     }
@@ -39,13 +41,13 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{t("email")}</Label>
         <div className="relative">
           <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
           <Input
             id="email"
             type="email"
-            placeholder="Enter your email"
+            placeholder={t("enterEmail")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -57,14 +59,14 @@ export default function LoginForm() {
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">{t("password")}</Label>
           <Button
             variant="link"
             className="px-0 font-normal"
             onClick={() => router.push("/auth/reset-password")}
             type="button"
           >
-            Forgot password?
+            {t("forgotPassword")}
           </Button>
         </div>
         <div className="relative">
@@ -72,7 +74,7 @@ export default function LoginForm() {
           <Input
             id="password"
             type="password"
-            placeholder="Enter your password"
+            placeholder={t("enterPassword")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -86,10 +88,10 @@ export default function LoginForm() {
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Signing in...
+            {t("signingIn")}
           </>
         ) : (
-          "Sign in"
+          t("signIn")
         )}
       </Button>
     </form>

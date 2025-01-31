@@ -29,57 +29,73 @@ export function UserItemList() {
   const [userItems, setUserItems] = useState<UserItem[]>([]);
   const [imageUrls, setImageUrls] = useState<{ [key: string]: string }>({});
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
 
   useEffect(() => {
     async function fetchUserItems() {
-      if (user) {
-        const { data, error } = await supabase
-          .from("items")
-          .select("*")
-          .eq("user_id", user.id);
+      if (!session || !user) {
+        console.log("No session or user found");
+        return;
+      }
 
-        if (error) {
-          console.error("Error fetching user items:", error);
-        } else {
-          setUserItems(data || []);
-          const urls: { [key: string]: string } = {};
-          for (const item of data || []) {
-            if (item.images && item.images.length > 0) {
-              const imagePath = item.images[0];
-              const isFullUrl =
-                imagePath.startsWith("http://") ||
-                imagePath.startsWith("https://");
+      console.log("Fetching items for user:", user.id);
 
-              try {
-                if (isFullUrl) {
-                  const filename = imagePath.split("/").pop() || "";
-                  const privatePath = `private/${filename}`;
-                  const url = await getAuthenticatedImageUrl(privatePath);
-                  if (url) {
-                    urls[item.id] = url;
-                  }
-                } else {
-                  const url = await getAuthenticatedImageUrl(imagePath);
-                  if (url) {
-                    urls[item.id] = url;
-                  }
-                }
-              } catch (error) {
-                console.error(
-                  `Error processing image for item ${item.id}:`,
-                  error
+      const { data, error } = await supabase
+        .from("items")
+        .select("*")
+        .eq("user_id", user.id);
+
+      console.log("Query result:", { data, error });
+
+      if (error) {
+        console.error("Error fetching user items:", error);
+      } else {
+        setUserItems(data || []);
+        const urls: { [key: string]: string } = {};
+        for (const item of data || []) {
+          if (item.images && item.images.length > 0) {
+            const imagePath = item.images[0];
+            console.log(`Processing image for item ${item.id}:`, imagePath);
+
+            const isFullUrl =
+              imagePath.startsWith("http://") ||
+              imagePath.startsWith("https://");
+
+            try {
+              if (isFullUrl) {
+                const filename = imagePath.split("/").pop() || "";
+                const privatePath = `private/${filename}`;
+                console.log(
+                  "Getting signed URL for private path:",
+                  privatePath
                 );
+                const url = await getAuthenticatedImageUrl(privatePath);
+                console.log("Received URL:", url);
+                if (url) {
+                  urls[item.id] = url;
+                }
+              } else {
+                console.log("Getting signed URL for path:", imagePath);
+                const url = await getAuthenticatedImageUrl(imagePath);
+                console.log("Received URL:", url);
+                if (url) {
+                  urls[item.id] = url;
+                }
               }
+            } catch (error) {
+              console.error(
+                `Error processing image for item ${item.id}:`,
+                error
+              );
             }
           }
-          setImageUrls(urls);
         }
+        setImageUrls(urls);
       }
     }
 
     fetchUserItems();
-  }, [user]);
+  }, [user, session]);
 
   const openChat = (item: UserItem) => {
     setActiveChat(item);
@@ -91,7 +107,7 @@ export function UserItemList() {
         <Card key={item.id} className="overflow-hidden">
           <CardContent className="p-0">
             <div className="flex flex-col sm:flex-row items-center">
-              <div className="w-full sm:w-24 h-48 sm:h-24 relative">
+              <div className="w-full sm:w-48 h-48 sm:h-24 relative overflow-hidden rounded-none sm:rounded-lg sm:ml-2">
                 <Image
                   src={imageUrls[item.id] || "/placeholder.svg"}
                   alt={item.title}
@@ -111,7 +127,7 @@ export function UserItemList() {
                 <div className="flex flex-col sm:flex-row justify-between items-start mb-2">
                   <div>
                     <h3 className="font-semibold text-lg">{item.title}</h3>
-                    <p className="text-primary font-medium">${item.price}</p>
+                    <p className="text-primary font-medium">€{item.price}</p>
                   </div>
                   <Badge variant="secondary" className="mt-2 sm:mt-0">
                     {t(item.quality.toLowerCase())}

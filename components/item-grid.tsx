@@ -9,6 +9,7 @@ import { MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { supabase, getAuthenticatedImageUrl } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Item {
   id: number;
@@ -22,6 +23,9 @@ interface Item {
 export function ItemGrid() {
   const [items, setItems] = useState<Item[]>([]);
   const [imageUrls, setImageUrls] = useState<{ [key: string]: string }>({});
+  const [loadingImages, setLoadingImages] = useState<{
+    [key: string]: boolean;
+  }>({});
   const { t } = useTranslation();
   const { user } = useAuth();
 
@@ -33,6 +37,13 @@ export function ItemGrid() {
         console.error("Error fetching items:", error);
       } else {
         setItems(data || []);
+        // Initialize loading state for all items
+        const initialLoadingState = (data || []).reduce((acc, item) => {
+          acc[item.id] = true;
+          return acc;
+        }, {} as { [key: string]: boolean });
+        setLoadingImages(initialLoadingState);
+
         if (user) {
           const urls: { [key: string]: string } = {};
           for (const item of data || []) {
@@ -61,7 +72,19 @@ export function ItemGrid() {
                   `Error processing image for item ${item.id}:`,
                   error
                 );
+              } finally {
+                // Set loading to false for this item regardless of success/failure
+                setLoadingImages((prev) => ({
+                  ...prev,
+                  [item.id]: false,
+                }));
               }
+            } else {
+              // If no images, set loading to false immediately
+              setLoadingImages((prev) => ({
+                ...prev,
+                [item.id]: false,
+              }));
             }
           }
           setImageUrls(urls);
@@ -79,20 +102,24 @@ export function ItemGrid() {
           <Card className="overflow-hidden transition-transform duration-200 hover:scale-105">
             <CardContent className="p-0">
               <div className="aspect-square relative">
-                <Image
-                  src={imageUrls[item.id] || "/placeholder.svg"}
-                  alt={item.title}
-                  fill
-                  className="object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = "/placeholder.svg";
-                    console.error(
-                      `Failed to load image for item ${item.id}:`,
-                      item.images[0]
-                    );
-                  }}
-                />
+                {loadingImages[item.id] ? (
+                  <Skeleton className="w-full h-full" />
+                ) : (
+                  <Image
+                    src={imageUrls[item.id] || "/placeholder.svg"}
+                    alt={item.title}
+                    fill
+                    className="object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "/placeholder.svg";
+                      console.error(
+                        `Failed to load image for item ${item.id}:`,
+                        item.images[0]
+                      );
+                    }}
+                  />
+                )}
               </div>
               <div className="p-4 bg-background/80 backdrop-blur-sm">
                 <h3 className="font-semibold truncate text-foreground">

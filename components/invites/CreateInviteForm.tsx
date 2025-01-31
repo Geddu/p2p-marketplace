@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { CopyIcon, SendIcon, Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 interface CreateInviteFormProps {
   invitesLeft: number;
@@ -16,6 +17,7 @@ interface CreateInviteFormProps {
 export default function CreateInviteForm({
   invitesLeft,
 }: CreateInviteFormProps) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -24,7 +26,7 @@ export default function CreateInviteForm({
 
   const generateInviteCode = async () => {
     if (invitesLeft <= 0) {
-      toast.error("No invites left!");
+      toast.error(t("noInvitesLeft"));
       return;
     }
 
@@ -34,7 +36,7 @@ export default function CreateInviteForm({
         data: { session },
       } = await supabase.auth.getSession();
       if (!session) {
-        toast.error("You must be logged in");
+        toast.error(t("mustBeLoggedIn"));
         return;
       }
 
@@ -45,25 +47,30 @@ export default function CreateInviteForm({
         .single();
 
       if (!profile) {
-        toast.error("Profile not found");
+        toast.error(t("profileNotFound"));
         return;
       }
 
       const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const { error } = await supabase.from("invites").insert({
-        code,
-        email: email || null,
-        inviter_id: profile.id,
-        status: "pending",
-        expires_at: new Date(
-          Date.now() + 7 * 24 * 60 * 60 * 1000
-        ).toISOString(), // 7 days
-      });
+
+      const { data: invite, error } = await supabase
+        .from("invites")
+        .insert({
+          code,
+          email: email.trim() || null,
+          inviter_id: profile.id,
+          status: "pending",
+          expires_at: new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000
+          ).toISOString(), // 7 days
+        })
+        .select()
+        .single();
 
       if (error) {
         if (error.code === "23505") {
           // Unique violation
-          toast.error("This email has already been invited");
+          toast.error(t("emailAlreadyInvited"));
         } else {
           throw error;
         }
@@ -75,14 +82,14 @@ export default function CreateInviteForm({
       queryClient.invalidateQueries({ queryKey: ["profile"] });
 
       setGeneratedCode(code);
-      toast.success("Invite code generated successfully!");
+      toast.success(t("inviteGenerated"));
 
-      if (email) {
+      if (email.trim()) {
         await sendInviteEmail(code);
       }
     } catch (error) {
-      toast.error("Failed to generate invite code");
-      console.error(error);
+      toast.error(t("generateFailed"));
+      console.error("Error generating invite:", error);
     } finally {
       setIsLoading(false);
     }
@@ -91,8 +98,6 @@ export default function CreateInviteForm({
   const sendInviteEmail = async (codeToSend: string) => {
     setIsSending(true);
     try {
-      // Here you would integrate with your email service
-      // For example, using a serverless function or API route
       const response = await fetch("/api/send-invite", {
         method: "POST",
         headers: {
@@ -106,11 +111,11 @@ export default function CreateInviteForm({
 
       if (!response.ok) throw new Error("Failed to send email");
 
-      toast.success(`Invite sent to ${email}`);
+      toast.success(`${t("inviteGenerated")} ${email}`);
       setEmail("");
     } catch (error) {
       console.error("Failed to send email:", error);
-      toast.error("Failed to send email, but code was generated");
+      toast.error(t("emailSendFailedButCode"));
     } finally {
       setIsSending(false);
     }
@@ -120,9 +125,9 @@ export default function CreateInviteForm({
     if (generatedCode) {
       try {
         await navigator.clipboard.writeText(generatedCode);
-        toast.success("Code copied to clipboard!");
+        toast.success(t("codeCopied"));
       } catch (err) {
-        toast.error("Failed to copy code");
+        toast.error(t("copyFailed"));
       }
     }
   };
@@ -130,11 +135,11 @@ export default function CreateInviteForm({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Email (Optional)</Label>
+        <Label htmlFor="email">{t("emailOptional")}</Label>
         <Input
           id="email"
           type="email"
-          placeholder="friend@example.com"
+          placeholder={t("emailPlaceholder")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           disabled={isLoading || isSending}
@@ -149,10 +154,10 @@ export default function CreateInviteForm({
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Generating...
+              {t("generating")}
             </>
           ) : (
-            "Generate Invite Code"
+            t("generateInvite")
           )}
         </Button>
 
@@ -160,7 +165,7 @@ export default function CreateInviteForm({
           <>
             <Button variant="outline" onClick={copyToClipboard}>
               <CopyIcon className="w-4 h-4 mr-2" />
-              Copy Code
+              {t("copyCode")}
             </Button>
             {email && (
               <Button
@@ -173,7 +178,7 @@ export default function CreateInviteForm({
                 ) : (
                   <>
                     <SendIcon className="w-4 h-4 mr-2" />
-                    Send Email
+                    {t("sendEmail")}
                   </>
                 )}
               </Button>
@@ -190,8 +195,10 @@ export default function CreateInviteForm({
 
       {invitesLeft <= 2 && (
         <p className="text-sm text-yellow-600 dark:text-yellow-400">
-          You have only {invitesLeft} invite{invitesLeft === 1 ? "" : "s"} left.
-          Use it wisely!
+          {t("invitesLeftWarning", {
+            count: invitesLeft,
+            plural: invitesLeft === 1 ? "" : "s",
+          })}
         </p>
       )}
     </div>

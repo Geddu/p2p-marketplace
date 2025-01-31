@@ -1,0 +1,13 @@
+{
+  "tooManyImages": "Maximum {{count}} images allowed",
+  "imagesUploaded": "Images uploaded successfully",
+  "errorUploadingImages": "Error uploading images",
+  "imageRemoved": "Image removed successfully",
+  "errorRemovingImage": "Error removing image",
+  "mainImageSet": "Main image set successfully",
+  "currentMainImage": "Current main image",
+  "setAsMainImage": "Set as main image",
+  "mainImage": "Main image",
+  "itemImage": "Item image {{number}}",
+  "errorCreatingProfile": "Error creating user profile"
+}

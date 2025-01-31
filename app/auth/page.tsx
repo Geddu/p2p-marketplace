@@ -5,10 +5,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoginForm from "@/components/auth/LoginForm";
 import SignupForm from "@/components/auth/SignupForm";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import "../../styles/bacground.css";
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<string>("login");
+  const { t } = useTranslation();
 
   return (
     <div className="area min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 dark:from-orange-950 dark:via-background dark:to-orange-950 flex items-center justify-center p-4">
@@ -32,11 +34,9 @@ export default function AuthPage() {
       >
         <div className="text-center mb-12">
           <h1 className="bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent md:text-6xl text-3xl mb-2 font-bold tracking-tight leading-tight">
-            P2P Trader
+            {t("appTitle")}
           </h1>
-          <p className="text-muted-foreground mt-2">
-            Join our trusted community of peer-to-peer traders
-          </p>
+          <p className="text-muted-foreground mt-2">{t("appDescription")}</p>
         </div>
 
         <div className="bg-card border rounded-xl shadow-lg shadow-orange-900/5 overflow-hidden">
@@ -50,36 +50,28 @@ export default function AuthPage() {
                 value="login"
                 className="rounded-none data-[state=active]:bg-background"
               >
-                Login
+                {t("login")}
               </TabsTrigger>
               <TabsTrigger
                 value="signup"
                 className="rounded-none data-[state=active]:bg-background"
               >
-                Sign Up
+                {t("signUp")}
               </TabsTrigger>
             </TabsList>
             <div className="p-6">
               <TabsContent value="login" className="mt-0 space-y-4">
                 <div className="space-y-2">
                   <h2 className="text-2xl font-semibold tracking-tight">
-                    Welcome back
+                    {t("welcomeBackTitle")}
                   </h2>
                   <p className="text-sm text-muted-foreground">
-                    Enter your credentials to access your account
+                    {t("enterCredentials")}
                   </p>
                 </div>
                 <LoginForm />
               </TabsContent>
               <TabsContent value="signup" className="mt-0 space-y-4">
-                <div className="space-y-2">
-                  <h2 className="text-2xl font-semibold tracking-tight">
-                    Create an account
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    Enter your details to join our community
-                  </p>
-                </div>
                 <SignupForm />
               </TabsContent>
             </div>
@@ -87,19 +79,19 @@ export default function AuthPage() {
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-4">
-          By continuing, you agree to our{" "}
+          {t("termsAndPrivacy")}{" "}
           <a
             href="#"
             className="underline underline-offset-4 hover:text-primary"
           >
-            Terms of Service
+            {t("termsOfService")}
           </a>{" "}
-          and{" "}
+          {t("and")}{" "}
           <a
             href="#"
             className="underline underline-offset-4 hover:text-primary"
           >
-            Privacy Policy
+            {t("privacyPolicy")}
           </a>
         </p>
       </motion.div>
