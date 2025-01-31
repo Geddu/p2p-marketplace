@@ -1,22 +1,39 @@
-import { Inter } from "next/font/google"
-import "./globals.css"
-import dynamic from "next/dynamic"
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
+import Providers from "./providers";
+import Navbar from "@/components/Navbar";
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin"] });
 
-const DynamicProviders = dynamic(() => import("@/components/DynamicProviders"), { ssr: false })
+export const metadata: Metadata = {
+  title: "P2P Marketplace",
+  description: "A peer-to-peer marketplace for trading items",
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <DynamicProviders>{children}</DynamicProviders>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Providers>
+            <div className="min-h-screen bg-background">
+              <Navbar />
+              <main className="pb-16 md:pb-0">{children}</main>
+            </div>
+          </Providers>
+        </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }
-

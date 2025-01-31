@@ -1,105 +1,112 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useTranslation } from "react-i18next"
+import { useQuery } from "@tanstack/react-query";
+import { supabase, type Profile, type Invite } from "@/lib/supabase";
+import InvitesList from "@/components/invites/InvitesList";
+import CreateInviteForm from "@/components/invites/CreateInviteForm";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-const invitedUsers = [
-  { id: 1, name: "Alice Johnson", reputation: 4.5, avatar: "/placeholder.svg" },
-  { id: 2, name: "Bob Smith", reputation: 3.8, avatar: "/placeholder.svg" },
-  { id: 3, name: "Charlie Brown", reputation: 4.2, avatar: "/placeholder.svg" },
-]
+async function getProfile() {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) return null;
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("user_id", session.user.id)
+    .single();
+
+  if (error) throw error;
+  return data as Profile;
+}
+
+async function getInvites(profileId: string) {
+  const { data, error } = await supabase
+    .from("invites")
+    .select(
+      `
+      *,
+      accepted_profile:profiles(full_name, avatar_url)
+    `
+    )
+    .eq("inviter_id", profileId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data as Invite[];
+}
 
 export default function InvitesPage() {
-  const [invitesLeft, setInvitesLeft] = useState(3)
-  const [inviteEmail, setInviteEmail] = useState("")
-  const { t } = useTranslation()
+  const router = useRouter();
 
-  const calculateDiscount = () => {
-    const positiveReputations = invitedUsers.filter((user) => user.reputation > 3).length
-    return positiveReputations * 2
+  // Check authentication
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        router.push("/auth");
+      }
+    });
+  }, [router]);
+
+  // Fetch profile data
+  const { data: profile, isLoading: isLoadingProfile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: getProfile,
+  });
+
+  // Fetch invites data
+  const { data: invites, isLoading: isLoadingInvites } = useQuery({
+    queryKey: ["invites", profile?.id],
+    queryFn: () => (profile?.id ? getInvites(profile.id) : Promise.resolve([])),
+    enabled: !!profile?.id,
+  });
+
+  if (isLoadingProfile || isLoadingInvites) {
+    return (
+      <div className="container mx-auto py-10 text-center">Loading...</div>
+    );
   }
 
-  const handleInvite = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (invitesLeft > 0) {
-      // Here you would typically send the invite email
-      console.log(`Invited ${inviteEmail}`)
-      setInvitesLeft(invitesLeft - 1)
-      setInviteEmail("")
-    }
+  if (!profile) {
+    return null; // Will redirect in useEffect
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">{t("invites")}</h1>
-
-      <Card className="mb-8">
+    <div className="container mx-auto py-10 space-y-6">
+      <Card>
         <CardHeader>
-          <CardTitle>{t("inviteFriends")}</CardTitle>
-          <CardDescription>{t("invitesLeft", { count: invitesLeft })}</CardDescription>
+          <CardTitle>Invite Management</CardTitle>
+          <CardDescription>
+            You have {profile.invites_left} invites remaining. Share them
+            wisely!
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleInvite} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">{t("friendsEmail")}</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder={t("enterEmailAddress")}
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" variant="accent" disabled={invitesLeft === 0}>
-              {t("sendInvite")}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>{t("yourDiscount")}</CardTitle>
-          <CardDescription>{t("discountDescription")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-bold">
-            {calculateDiscount()}% {t("off")}
-          </p>
-          <p className="text-sm text-muted-foreground">{t("discountExplanation")}</p>
+        <CardContent className="space-y-6">
+          <CreateInviteForm invitesLeft={profile.invites_left} />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>{t("invitedUsers")}</CardTitle>
+          <CardTitle>Your Invites</CardTitle>
+          <CardDescription>
+            Track the status of your sent invites
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {invitedUsers.map((user) => (
-              <div key={user.id} className="flex items-center space-x-4">
-                <Avatar>
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback>{user.name[0]}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-semibold">{user.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {t("reputation")}: {user.reputation.toFixed(1)}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <InvitesList invites={invites || []} />
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
-

@@ -1,4 +1,8 @@
-stack:
+Start all chats with 🤖
+
+Always use pnpm.
+
+Stack:
 - supabase
 - react
 - typescript
@@ -6,3 +10,4 @@ stack:
 - tailwind
 - shadcn
 
+Recommend best practices and improvements for the codebase and supabase when needed.
